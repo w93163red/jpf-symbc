@@ -18,7 +18,7 @@
 
 package gov.nasa.jpf.symbc;
 
-import org.junit.Test;
+import org.junit .Test;
 
 public class TestPathCondition extends InvokeTest{
 
