@@ -1,5 +1,7 @@
 package examples;
 
+import gov.nasa.jpf.symbc.Concrete;
+
 public class Example {
 	
     public static void main (String[] args) {

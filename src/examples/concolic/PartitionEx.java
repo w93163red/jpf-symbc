@@ -24,12 +24,12 @@ import gov.nasa.jpf.symbc.Partition;
 public class PartitionEx {
 	
 	public static void runSymbolic(double y) {
-			if(y > runConcrete(y)) {
-				System.out.println("greater than the input ");
-			} else {
-				System.out.println("less than the input");
-			}
-			System.out.println("x > 10");
+		if(y > runConcrete(y)) {
+			System.out.println("greater than the input ");
+		} else {
+			System.out.println("less than the input");
+		}
+		System.out.println("x > 10");
 	}
 	
 	@Concrete("true")

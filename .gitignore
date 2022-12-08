@@ -11,3 +11,4 @@ trace
 *.orig
 *~
 *.DS_Store
+classes/*

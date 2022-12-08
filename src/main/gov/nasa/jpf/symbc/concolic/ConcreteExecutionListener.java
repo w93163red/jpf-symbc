@@ -19,7 +19,7 @@
 package gov.nasa.jpf.symbc.concolic;
 
 import gov.nasa.jpf.symbc.SymbolicInstructionFactory;
-import gov.nasa.jpf.symbc.numeric.PathCondition;
+import gov.nasa.jpf.symbc.numeric.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,16 +31,8 @@ import gov.nasa.jpf.PropertyListenerAdapter;
 import gov.nasa.jpf.jvm.bytecode.EXECUTENATIVE;
 import gov.nasa.jpf.jvm.bytecode.JVMInvokeInstruction;
 import gov.nasa.jpf.report.ConsolePublisher;
-import gov.nasa.jpf.symbc.numeric.Expression;
-import gov.nasa.jpf.symbc.numeric.IntegerConstant;
-import gov.nasa.jpf.symbc.numeric.RealConstant;
-import gov.nasa.jpf.vm.AnnotationInfo;
-import gov.nasa.jpf.vm.Instruction;
-import gov.nasa.jpf.vm.LocalVarInfo;
-import gov.nasa.jpf.vm.MethodInfo;
-import gov.nasa.jpf.vm.StackFrame;
-import gov.nasa.jpf.vm.ThreadInfo;
-import gov.nasa.jpf.vm.VM;
+import gov.nasa.jpf.symbc.string.StringConstant;
+import gov.nasa.jpf.vm.*;
 
 public class ConcreteExecutionListener extends PropertyListenerAdapter {
 
@@ -62,20 +54,32 @@ public class ConcreteExecutionListener extends PropertyListenerAdapter {
 
 	@Override
 	public void instructionExecuted(VM vm, ThreadInfo currentThread, Instruction nextInstruction, Instruction executedInstruction) {
-
 		Instruction lastInsn =  executedInstruction;
 		MethodInfo mi = executedInstruction.getMethodInfo();
+//		System.out.println("Instruction: " + lastInsn);
+//		System.out.println("mi: " + mi);
 		if(lastInsn != null && lastInsn instanceof JVMInvokeInstruction) {
+
 			boolean foundAnote = checkConcreteAnnotation(mi);
+//			boolean foundFunction = ((JVMInvokeInstruction) lastInsn).getInvokedMethodName().contains("println");
+			// if the function is annotated with concolic, it would run all the way here?
+			// Need to skip System.out.println, seems VM did not handle println correctly
 			if(foundAnote) {
 				ThreadInfo ti = vm.getCurrentThread();
 				StackFrame sf = ti.popAndGetModifiableTopFrame();
 				FunctionExpression result =
 					generateFunctionExpression(mi, (JVMInvokeInstruction)
 													lastInsn, ti);
+				vm.updatePath();
+//				System.out.println("current cg: " + ((PCChoiceGenerator) vm.getSystemState().getChoiceGenerator()).getCurrentPC().stringPC());
+				PathCondition pc = PathCondition.getPC(vm);
+				System.out.println("current cg: " + pc.stringPC());
 				checkReturnType(ti, mi, result);
 				Instruction nextIns = sf.getPC().getNext();
-			    vm.getCurrentThread().skipInstruction(nextIns);
+				System.out.println("nextIns: " + nextIns);
+				// TODO: LX: This might be helpful to add another check here to inject the result
+				// LX: Get the current path constraint
+				vm.getCurrentThread().skipInstruction(nextIns);
 			}
 		}
 	}
@@ -108,11 +112,21 @@ public class ConcreteExecutionListener extends PropertyListenerAdapter {
 
 	private FunctionExpression generateFunctionExpression(MethodInfo mi,
 			JVMInvokeInstruction ivk, ThreadInfo ti){
+
+		System.out.println("ivk: " + ivk);
+		System.out.println("mi: " + mi);
+
+		// ivk is the statement within the method
+		// If ivk is invokevirtual, the first attr will be the objectref, start from 1 is the actual arguments
 		Object [] attrs = ivk.getArgumentAttrs(ti);
+		System.out.println("attrs: " + attrs);
 		Object [] values = ivk.getArgumentValues(ti);
+		// means the function/method type
 		String [] types = mi.getArgumentTypeNames();
 
 		assert (attrs != null);
+		// This assertion might have some problem that
+		// ivk is the actual function and mi is the methodinfo
 
 		assert (attrs.length == values.length &&
 						values.length == types.length);
@@ -124,9 +138,11 @@ public class ConcreteExecutionListener extends PropertyListenerAdapter {
 		Map<String,Expression> expressionMap =
 			new HashMap<String, Expression>();
 		LocalVarInfo[] localVars = mi.getLocalVars();
-
-		for(int argIndex = 0; argIndex < size; argIndex++) {
+		System.out.println("values.size: " + values.length + " sym_args: " + sym_args.length);
+		for(int argIndex = 0; argIndex < size && argIndex < types.length && argIndex < values.length; argIndex++) {
 			Object attribute = attrs[argIndex];
+			System.out.println(" values: " + values[argIndex] + " types: " + types[argIndex]);
+
 			if(attribute == null) {
 				sym_args[argIndex] = this.generateConstant(
 								types[argIndex],
@@ -188,12 +204,18 @@ public class ConcreteExecutionListener extends PropertyListenerAdapter {
 	}
 
 	private Expression generateConstant(String typeVal, Object value) {
-		if(typeVal.equals("int")) {
+		System.out.println(String.format("generate constant here: type: %s, value: %s", typeVal, value));
+		if(typeVal.equals("int") && value.toString().contains("String")) {
+			return new StringConstant("123456");
+		}
+		else if(typeVal.equals("int")) {
 			return new IntegerConstant(Integer.parseInt
-					(value.toString()));
+//					(value.toString()));
+		("1"));
 		} else if (typeVal.equals("double")) {
 			return new RealConstant(Double.parseDouble
 					(value.toString()));
+//		("1.0"));
 		} else if (typeVal.equals("float")) {
 			return new RealConstant(Float.parseFloat
 					(value.toString()));
@@ -209,7 +231,9 @@ public class ConcreteExecutionListener extends PropertyListenerAdapter {
 			} else {
 				return new IntegerConstant(0);
 			}
-		} else {
+		}
+		// TODO: if it is String, might need to read from config
+		else {
 			throw new RuntimeException("the type not handled :" + typeVal);
 		}
 	}

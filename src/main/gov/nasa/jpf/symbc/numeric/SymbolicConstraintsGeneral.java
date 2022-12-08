@@ -125,6 +125,7 @@ public class SymbolicConstraintsGeneral {
          * work otherwise and the solver gets filled up with wrong assertions,
          * e.g. with Z3.
          */
+        // LinG: Also PCParser.parse will generate the value if possible
         ProblemGeneral tempPb = PCParser.parse(pc, pb);
 
         if (tempPb == null)
@@ -232,7 +233,8 @@ public class SymbolicConstraintsGeneral {
                     Entry<SymbolicReal, Object> e = i_real.next();
                     SymbolicReal pcVar = e.getKey();
                     Object dpVar = e.getValue();
-                    pcVar.solution = pb.getRealValue(dpVar); // may be undefined: throws an exception
+                    pcVar.solution = pb.getRealValue(dpVar); // may be undefined: throws an exception]
+                    System.out.println("solution" + pcVar.solution);
                 }
             } catch (Exception exp) {
                 this.catchBody(PCParser.symRealVar, pb, pc);
@@ -245,7 +247,7 @@ public class SymbolicConstraintsGeneral {
             while (i_int.hasNext()) {
                 Entry<SymbolicInteger, Object> e = i_int.next();
                 e.getKey().solution = pb.getIntValue(e.getValue());
-
+                System.out.println("Solution INT: " + e.getKey().solution);
             }
             // }
             /*

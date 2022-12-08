@@ -11,7 +11,7 @@ symbolic.concolic=true
 
 #symbolic.heuristicPartition=true
 
-#symbolic.debug=on
+symbolic.debug=on
 
 listener = .symbc.concolic.ConcreteExecutionListener
 

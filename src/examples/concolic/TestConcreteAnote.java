@@ -19,28 +19,27 @@
 package concolic;
 
 import gov.nasa.jpf.symbc.Concrete;
-
+import java.lang.Math;
 public class TestConcreteAnote {
 
-	public static void runSymbolic(int x, double y) {
-		if(x > 10) {
-			//int y = runConcrete(x);
-			if(y == runConcrete(y)) {
-				//System.out.println("y is zero");
-			}
-			System.out.println("x > 10");
-		} else {
-			System.out.println("x <= 10");
-		}
-	}
-	
 	@Concrete("true")
-	public static double runConcrete(double z) {
-		System.out.println("running concrete");
-		return 0.0;
+	public static void runSymbolic(int x, int y, String z) {
+		if(x > y) {
+			Math.sin(y);
+			Math.min(x, y);
+//			System.out.println("x > y");
+		} else {
+			Math.cos(x);
+			Math.min(x, y);
+//			if (z.length() < 6) {
+//				System.out.println(z);
+//			}
+			System.out.println(z);
+		}
+		// check if the normal statement works
 	}
 	
 	public static void main(String[] args) {
-		runSymbolic(1,0);
+		runSymbolic(1, 2, "z");
 	}
 }

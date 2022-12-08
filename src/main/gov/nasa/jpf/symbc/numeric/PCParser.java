@@ -70,7 +70,7 @@ import java.util.Map.Entry;
 public class PCParser {
   static ProblemGeneral pb;
   static public Map<SymbolicReal, Object>	symRealVar =new HashMap<SymbolicReal,Object>(); // a map between symbolic real variables and DP variables
-  static Map<SymbolicInteger,Object>	symIntegerVar = new HashMap<SymbolicInteger,Object>(); // a map between symbolic variables and DP variables
+  static public Map<SymbolicInteger,Object>	symIntegerVar = new HashMap<SymbolicInteger,Object>(); // a map between symbolic variables and DP variables
   //static Boolean result; // tells whether result is satisfiable or not
   static int tempVars = 0; //Used to construct "or" clauses
 
@@ -692,6 +692,7 @@ public class PCParser {
 
   }
 
+  // LinG: after create the linear constraint, it can generate the value together
   static public boolean createDPLinearIntegerConstraint(LinearIntegerConstraint cRef) {
 
     Comparator c_compRef = cRef.getComparator();
@@ -1071,6 +1072,7 @@ getExpression(stoex.value)), newae));
     //result = null;
     tempVars = 0;
 
+    // LinG: the constraint in the pc
     Constraint cRef = pc.header;
 
     if(pb instanceof IncrementalSolver) {
